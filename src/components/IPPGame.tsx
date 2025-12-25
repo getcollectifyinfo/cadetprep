@@ -27,6 +27,12 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const [timer, setTimer] = useState(120); // 2 minutes in seconds
   const [gameOver, setGameOver] = useState(false);
   const [assignments, setAssignments] = useState<{ [key in GaugeId]: string }>(getRandomKeys);
+  const assignmentsRef = useRef(assignments); // Ref to track assignments without triggering re-renders/interval resets
+
+  useEffect(() => {
+    assignmentsRef.current = assignments;
+  }, [assignments]);
+
   const [showHint, setShowHint] = useState(false);
   const [hintText, setHintText] = useState('');
   const [stats, setStats] = useState<GameStats>({ correct: 0, wrong: 0 });
@@ -48,7 +54,10 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
 
   // Show hint on initial mount
   useEffect(() => {
-    triggerHint(`LEFT: ${assignments.left} , UP: ${assignments.top} , RIGHT: ${assignments.right}`);
+    const t = setTimeout(() => {
+        triggerHint(`LEFT: ${assignments.left} , UP: ${assignments.top} , RIGHT: ${assignments.right}`);
+    }, 0);
+    return () => clearTimeout(t);
   }, []); 
 
   // Random reassignment loop - changes ONE key at a time
@@ -58,12 +67,18 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
       
       const gauges: GaugeId[] = ['left', 'top', 'right'];
       const targetGauge = gauges[Math.floor(Math.random() * gauges.length)];
-      const newKey = availableKeys[Math.floor(Math.random() * availableKeys.length)];
+      
+      // Get currently used keys from ref to ensure uniqueness
+      const currentAssignments = assignmentsRef.current;
+      const usedKeys = Object.values(currentAssignments);
+      
+      // Filter available keys to exclude those currently in use (except the one we are replacing, technically, but simpler to exclude all active ones)
+      const validKeys = availableKeys.filter(k => !usedKeys.includes(k));
+      
+      // Pick a random key from valid keys
+      const newKey = validKeys[Math.floor(Math.random() * validKeys.length)];
       
       setAssignments(prev => {
-        // Only update if key is different (optional, but good practice)
-        if (prev[targetGauge] === newKey) return prev;
-        
         return {
             ...prev,
             [targetGauge]: newKey
