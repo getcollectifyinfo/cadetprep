@@ -12,48 +12,57 @@ interface GameStats {
 
 type GaugeId = 'left' | 'top' | 'right';
 
+const availableKeys = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'];
+
+const getRandomKeys = () => {
+  const shuffled = [...availableKeys].sort(() => 0.5 - Math.random());
+  return {
+    left: shuffled[0],
+    top: shuffled[1],
+    right: shuffled[2]
+  };
+};
+
 export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const [timer, setTimer] = useState(120); // 2 minutes in seconds
   const [gameOver, setGameOver] = useState(false);
-  const [assignments, setAssignments] = useState<{ [key in GaugeId]: string }>({ left: '', top: '', right: '' });
+  const [assignments, setAssignments] = useState<{ [key in GaugeId]: string }>(getRandomKeys);
   const [showHint, setShowHint] = useState(false);
   const [stats, setStats] = useState<GameStats>({ correct: 0, wrong: 0 });
   const [gaugeLocks, setGaugeLocks] = useState<{ [key in GaugeId]: boolean }>({ left: false, top: false, right: false });
+  const hintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Available keys for assignment
-  const availableKeys = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'];
-
-  // Helper to get random keys
-  const getRandomKeys = useCallback(() => {
-    const shuffled = [...availableKeys].sort(() => 0.5 - Math.random());
-    return {
-      left: shuffled[0],
-      top: shuffled[1],
-      right: shuffled[2]
-    };
+  // Helper to show hint
+  const triggerHint = useCallback(() => {
+    if (hintTimeoutRef.current) {
+      clearTimeout(hintTimeoutRef.current);
+    }
+    setShowHint(true);
+    hintTimeoutRef.current = setTimeout(() => {
+      setShowHint(false);
+      hintTimeoutRef.current = null;
+    }, 1000);
   }, []);
 
-  // Initialize assignments
+  // Show hint on initial mount
   useEffect(() => {
-    const newAssignments = getRandomKeys();
-    setAssignments(newAssignments);
-    setShowHint(true);
-    const timeout = setTimeout(() => setShowHint(false), 1000); // Show for 1 second
+    triggerHint();
+  }, [triggerHint]);
 
-    // Random reassignment loop
+  // Random reassignment loop
+  useEffect(() => {
     const reassignmentInterval = setInterval(() => {
       if (gameOver) return;
       const nextAssignments = getRandomKeys();
       setAssignments(nextAssignments);
-      setShowHint(true);
-      setTimeout(() => setShowHint(false), 1000);
-    }, 15000 + Math.random() * 15000); // Random interval between 15s and 30s? User said "random zamanlama".
+      triggerHint();
+    }, 15000 + Math.random() * 15000); 
 
     return () => {
-      clearTimeout(timeout);
+      if (hintTimeoutRef.current) clearTimeout(hintTimeoutRef.current);
       clearInterval(reassignmentInterval);
     };
-  }, [gameOver, getRandomKeys]);
+  }, [gameOver, triggerHint]);
 
   // Timer
   useEffect(() => {
@@ -78,7 +87,6 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
       const key = e.key.toUpperCase();
       
       let matched = false;
-      let wrongPress = false;
 
       // Check all locked gauges
       (Object.keys(gaugeLocks) as GaugeId[]).forEach(gaugeId => {
@@ -89,33 +97,20 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
             setGaugeLocks(prev => ({ ...prev, [gaugeId]: false })); // Release lock
             setStats(prev => ({ ...prev, correct: prev.correct + 1 }));
             matched = true;
-          } else {
-             // Wrong key for this specific locked gauge?
-             // Actually, if I press a key that is NOT assigned to ANY currently locked gauge, is it wrong?
-             // Or if I press 'A' (assigned to Left) but Left is not locked?
-             // Requirement: "Kullanıcı atanan tuşlardan başka herhangi bir harfe basarsa" -> Show hint.
-             // This implies checking if the pressed key matches the requirement of the active red gauge.
           }
         }
       });
 
       if (!matched) {
-          // Did we press a wrong key?
-          // If a gauge is locked, and we pressed a key that didn't unlock it, is it wrong?
-          // Or is "wrong" only if we press a key that is completely irrelevant?
-          // "Kullanıcı atanan tuşlardan başka herhangi bir harfe basarsa" -> If user presses a letter OTHER than the assigned ones?
-          // Let's assume: If key is NOT one of the current assignments, OR if it IS an assignment but that gauge is not in red?
-          // Let's simplify: Any key press that doesn't successfully unlock a red gauge is considered a "wrong/miss" and triggers hint.
-          
+          // Wrong press
           setStats(prev => ({ ...prev, wrong: prev.wrong + 1 }));
-          setShowHint(true);
-          setTimeout(() => setShowHint(false), 1000);
+          triggerHint();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gaugeLocks, assignments, gameOver]);
+  }, [gaugeLocks, assignments, gameOver, triggerHint]);
 
   const handleRedZoneEnter = (id: GaugeId) => {
     setGaugeLocks(prev => ({ ...prev, [id]: true }));
@@ -171,7 +166,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                     </span>
                 </div>
                 {/* Hint Text */}
-                <div className={`text-yellow-400 font-mono text-xl font-bold transition-opacity duration-300 ${showHint ? 'opacity-100' : 'opacity-0'}`}>
+                <div className={`text-yellow-400 font-mono text-xl font-bold transition-opacity duration-300 whitespace-nowrap ${showHint ? 'opacity-100' : 'opacity-0'}`}>
                     LEFT: {assignments.left} , TOP: {assignments.top} , RIGHT: {assignments.right}
                 </div>
             </div>
