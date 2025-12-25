@@ -124,7 +124,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `0${mins} MIN`; // As per reference "02 MIN"
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
