@@ -28,15 +28,17 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const [gameOver, setGameOver] = useState(false);
   const [assignments, setAssignments] = useState<{ [key in GaugeId]: string }>(getRandomKeys);
   const [showHint, setShowHint] = useState(false);
+  const [hintText, setHintText] = useState('');
   const [stats, setStats] = useState<GameStats>({ correct: 0, wrong: 0 });
   const [gaugeLocks, setGaugeLocks] = useState<{ [key in GaugeId]: boolean }>({ left: false, top: false, right: false });
   const hintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Helper to show hint
-  const triggerHint = useCallback(() => {
+  const triggerHint = useCallback((text: string) => {
     if (hintTimeoutRef.current) {
       clearTimeout(hintTimeoutRef.current);
     }
+    setHintText(text);
     setShowHint(true);
     hintTimeoutRef.current = setTimeout(() => {
       setShowHint(false);
@@ -46,16 +48,31 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
 
   // Show hint on initial mount
   useEffect(() => {
-    triggerHint();
-  }, [triggerHint]);
+    triggerHint(`LEFT: ${assignments.left} , UP: ${assignments.top} , RIGHT: ${assignments.right}`);
+  }, []); 
 
-  // Random reassignment loop
+  // Random reassignment loop - changes ONE key at a time
   useEffect(() => {
     const reassignmentInterval = setInterval(() => {
       if (gameOver) return;
-      const nextAssignments = getRandomKeys();
-      setAssignments(nextAssignments);
-      triggerHint();
+      
+      const gauges: GaugeId[] = ['left', 'top', 'right'];
+      const targetGauge = gauges[Math.floor(Math.random() * gauges.length)];
+      const newKey = availableKeys[Math.floor(Math.random() * availableKeys.length)];
+      
+      setAssignments(prev => {
+        // Only update if key is different (optional, but good practice)
+        if (prev[targetGauge] === newKey) return prev;
+        
+        return {
+            ...prev,
+            [targetGauge]: newKey
+        };
+      });
+
+      const nameMap: Record<GaugeId, string> = { left: 'LEFT', top: 'UP', right: 'RIGHT' };
+      triggerHint(`${nameMap[targetGauge]} Instrument assigned key: ${newKey}`);
+
     }, 15000 + Math.random() * 15000); 
 
     return () => {
@@ -104,7 +121,8 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
       if (!matched) {
           // Wrong press
           setStats(prev => ({ ...prev, wrong: prev.wrong + 1 }));
-          triggerHint();
+          // Show current assignments
+          triggerHint(`LEFT: ${assignments.left} , UP: ${assignments.top} , RIGHT: ${assignments.right}`);
       }
     };
 
@@ -167,7 +185,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                 </div>
                 {/* Hint Text */}
                 <div className={`text-yellow-400 font-mono text-xl font-bold transition-opacity duration-300 whitespace-nowrap ${showHint ? 'opacity-100' : 'opacity-0'}`}>
-                    LEFT: {assignments.left} , TOP: {assignments.top} , RIGHT: {assignments.right}
+                    {hintText}
                 </div>
             </div>
 

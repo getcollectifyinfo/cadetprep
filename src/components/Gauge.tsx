@@ -45,14 +45,10 @@ export const Gauge: React.FC<GaugeProps> = ({
         // Pick a new random target (0-100)
         let newTarget = Math.random() * 100;
         
-        // If locked in red, ensure target is in red (75-100)
+        // If locked in red, force target to 100 (end of gauge)
         if (isLockedInRedRef.current && inRed) {
-             newTarget = 75 + Math.random() * 25;
+             newTarget = 100;
         } 
-        // If NOT locked but currently in red, we probably want to get out? 
-        // The natural random * 100 will eventually take us out. 
-        // But if we just got unlocked, the useEffect above handles the immediate force-out.
-        // So here we just behave normally, unless we are locked.
 
         targetValueRef.current = newTarget;
         
@@ -61,8 +57,8 @@ export const Gauge: React.FC<GaugeProps> = ({
       }
       
       // Enforce lock if we are in red: Don't let target be outside red
-      if (isLockedInRedRef.current && inRed && targetValueRef.current < 75) {
-          targetValueRef.current = 75 + Math.random() * 25;
+      if (isLockedInRedRef.current && inRed) {
+          targetValueRef.current = 100;
       }
 
       // 2. Move towards target
@@ -164,6 +160,16 @@ export const Gauge: React.FC<GaugeProps> = ({
           fill="none"
           stroke="#991b1b" // Red-800
           strokeWidth={strokeWidth}
+        />
+        
+        {/* End Line at 100% */}
+        <line
+          x1={polarToCartesian(center, center, innerRadius, 495).x}
+          y1={polarToCartesian(center, center, innerRadius, 495).y}
+          x2={polarToCartesian(center, center, radius, 495).x}
+          y2={polarToCartesian(center, center, radius, 495).y}
+          stroke="#450a0a" 
+          strokeWidth="4"
         />
 
         {/* Needle */}
