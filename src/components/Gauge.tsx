@@ -5,13 +5,15 @@ interface GaugeProps {
   initialValue?: number; // 0 to 100
   isLockedInRed?: boolean;
   onRedZoneEnter?: () => void;
+  onHitMax?: () => void;
 }
 
 export const Gauge: React.FC<GaugeProps> = ({ 
   size = 200, 
   initialValue = 50,
   isLockedInRed = false,
-  onRedZoneEnter
+  onRedZoneEnter,
+  onHitMax
 }) => {
   // Value is 0-100. 0 is min (left), 100 is max (right)
   const [value, setValue] = useState(initialValue);
@@ -19,13 +21,17 @@ export const Gauge: React.FC<GaugeProps> = ({
   const animationSpeedRef = useRef(0.5); // steps per frame
   const isLockedInRedRef = useRef(isLockedInRed);
   const wasInRedRef = useRef(initialValue >= 75);
+  const hasHitMaxRef = useRef(false);
 
   // Update ref when prop changes
   useEffect(() => {
     isLockedInRedRef.current = isLockedInRed;
     // If we are unlocked and currently in red, force a move out
-    if (!isLockedInRed && value >= 75) {
-       targetValueRef.current = Math.random() * 70; // Target somewhere safe
+    if (!isLockedInRed) {
+        hasHitMaxRef.current = false;
+        if (value >= 75) {
+            targetValueRef.current = Math.random() * 70; // Target somewhere safe
+        }
     }
   }, [isLockedInRed, value]);
 
@@ -39,6 +45,12 @@ export const Gauge: React.FC<GaugeProps> = ({
         if (onRedZoneEnter) onRedZoneEnter();
       }
       wasInRedRef.current = inRed;
+      
+      // Check if we hit max (100) while locked
+      if (isLockedInRedRef.current && value >= 99.9 && !hasHitMaxRef.current) {
+          hasHitMaxRef.current = true;
+          if (onHitMax) onHitMax();
+      }
 
       // 1. Check if we reached the target
       if (Math.abs(value - targetValueRef.current) < 1) {

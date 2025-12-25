@@ -167,12 +167,17 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const handleRedZoneEnter = (id: GaugeId) => {
     setGaugeLocks(prev => {
         if (!prev[id]) {
-            // Only set start time if not already locked
-            lockStartTimes.current[id] = Date.now();
             return { ...prev, [id]: true };
         }
         return prev;
     });
+  };
+
+  const handleHitMax = (id: GaugeId) => {
+      // Set start time when needle hits max (100%)
+      if (!lockStartTimes.current[id]) {
+           lockStartTimes.current[id] = Date.now();
+      }
   };
 
   const formatTime = (seconds: number) => {
@@ -209,6 +214,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                 initialValue={75} 
                 isLockedInRed={gaugeLocks.top}
                 onRedZoneEnter={() => handleRedZoneEnter('top')}
+                onHitMax={() => handleHitMax('top')}
             />
         </div>
 
@@ -226,6 +232,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                     initialValue={25} 
                     isLockedInRed={gaugeLocks.left}
                     onRedZoneEnter={() => handleRedZoneEnter('left')}
+                    onHitMax={() => handleHitMax('left')}
                 />
             </div>
 
@@ -254,6 +261,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                     initialValue={80} 
                     isLockedInRed={gaugeLocks.right}
                     onRedZoneEnter={() => handleRedZoneEnter('right')}
+                    onHitMax={() => handleHitMax('right')}
                 />
             </div>
         </div>
