@@ -177,14 +177,14 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
             />
 
             {/* Center Digital Display & Hint */}
-            <div className="flex flex-col items-center gap-4">
+            <div className="relative flex flex-col items-center justify-center w-64">
                 <div className="bg-[#2a2a2a] px-16 py-6 border border-gray-600 shadow-inner">
                     <span className="text-[#22c55e] text-6xl font-mono font-bold tracking-widest">
                         70
                     </span>
                 </div>
                 {/* Hint Text */}
-                <div className={`text-yellow-400 font-mono text-xl font-bold transition-opacity duration-300 whitespace-nowrap ${showHint ? 'opacity-100' : 'opacity-0'}`}>
+                <div className={`absolute top-full mt-8 left-1/2 -translate-x-1/2 text-yellow-400 font-mono text-xl font-bold transition-opacity duration-300 whitespace-nowrap text-center ${showHint ? 'opacity-100' : 'opacity-0'}`}>
                     {hintText}
                 </div>
             </div>
