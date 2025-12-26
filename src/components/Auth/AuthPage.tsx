@@ -147,6 +147,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
             {isLogin ? 'Sign Up' : 'Sign In'}
           </button>
         </p>
+        
+        <div className="mt-8 pt-6 border-t border-gray-700 text-center">
+          <p className="text-xs text-gray-500 leading-relaxed">
+            CadetPrep Academy is an independent training platform. 
+            All trademarks and test names mentioned are the property of their respective owners. 
+            This platform is not affiliated with, approved, or endorsed by any airline or official testing organization.
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -22,6 +22,7 @@ const MOTIVATIONAL_MESSAGES = [
 ];
 
 import { LandingPage } from './components/LandingPage';
+import { MarketingPage } from './components/MarketingPage';
 // import { AuthPage } from './components/Auth/AuthPage';
 import { useAuth } from './contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -32,7 +33,7 @@ function App() {
   const { user, loading, signOut } = useAuth();
   const [startTime, setStartTime] = useState<number>(0);
   // Navigation State
-  const [currentPage, setCurrentPage] = useState<'LANDING' | 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY'>('LANDING');
+  const [currentPage, setCurrentPage] = useState<'MARKETING' | 'LANDING' | 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY'>('MARKETING');
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
@@ -640,6 +641,10 @@ function App() {
   // ----------------------------------------------------------------------
   // RENDER LOGIC
   // ----------------------------------------------------------------------
+
+  if (currentPage === 'MARKETING') {
+    return <MarketingPage onStartDemo={() => setCurrentPage('LANDING')} />;
+  }
 
   if (currentPage === 'LANDING') {
     return <LandingPage onSelectGame={(game) => setCurrentPage(game)} onSignOut={signOut} user={user} />;
