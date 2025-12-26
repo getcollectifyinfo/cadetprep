@@ -10,60 +10,64 @@ export const useVIGI1GameLogic = () => {
   // Stats
   const [totalEvents, setTotalEvents] = useState(0); // Total mismatches presented
   const [caughtEvents, setCaughtEvents] = useState(0); // Correct clicks on mismatch
-  const [wrongMoves, setWrongMoves] = useState(0); // Clicks on match (false alarm) or missed mismatch?
-  // Usually "False Alarm" is clicking when match. "Miss" is not clicking when mismatch.
+  const [wrongMoves, setWrongMoves] = useState(0); // Clicks on match (false alarm)
   
-  const timerRef = useRef<any>(null);
-  const updateIntervalRef = useRef<any>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const updateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const directionRef = useRef<1 | -1>(1); // 1: Clockwise, -1: Counter-clockwise
+  const stepsUntilTurnRef = useRef<number>(0);
 
   // Difficulty settings (could be passed in)
-  const UPDATE_SPEED = 2000; // ms per update
+  const UPDATE_SPEED = 1000; // ms per update
   const MISMATCH_CHANCE = 0.3; // 30% chance of mismatch
 
-  const generateNextState = useCallback(() => {
-    // Move analog needle (e.g., clockwise by 1-3 steps or random)
-    // Let's make it random but moving forward mostly to simulate "movement"
-    setAnalogValue(prev => {
-      let next = prev + 1;
-      if (next > 36) next = 1;
-      return next;
-    });
+  // Refactored State Update Logic to ensure synchronization
+  const updateGameLoop = useCallback(() => {
+    setAnalogValue(prevAnalog => {
+        // 1. Logic for movement
+        stepsUntilTurnRef.current--;
+        if (stepsUntilTurnRef.current <= 0) {
+            directionRef.current = Math.random() < 0.5 ? 1 : -1;
+            stepsUntilTurnRef.current = Math.floor(Math.random() * 8) + 3;
+        }
 
-    // Determine Digital Value
-    // We need the *new* analog value. React state update is async, so we calculate locally.
-    const getNextAnalog = (current: number) => {
-       let next = current + 1;
-       if (next > 36) next = 1;
-       return next;
-    };
+        let nextAnalog = prevAnalog + directionRef.current;
+        if (nextAnalog > 36) nextAnalog = 1;
+        if (nextAnalog < 1) nextAnalog = 36;
 
-    setAnalogValue(prev => {
-        const nextAnalog = getNextAnalog(prev);
-        
-        const isMismatch = Math.random() < MISMATCH_CHANCE;
+        // 2. Logic for Digital Display (Mismatch generation)
+        const shouldMismatch = Math.random() < MISMATCH_CHANCE;
         let nextDigital = nextAnalog * 10;
 
-        if (isMismatch) {
-            // Generate a subtle mismatch
-            // e.g. Analog 16 -> Ideal 160. Mismatch 150.
-            // Or Analog 33 -> Ideal 330. Mismatch 320.
-            const offset = Math.random() < 0.5 ? -10 : 10;
-            nextDigital += offset;
+        if (shouldMismatch) {
+            // User example: "Needle 5->6, Digital 50 (previous)".
+            // Let's implement this specific "Lag" type error often.
+            const isLagError = Math.random() < 0.6; 
             
-            // Ensure digital is within reasonable bounds (0-360 approx)
-            if (nextDigital < 0) nextDigital += 20;
-            if (nextDigital > 370) nextDigital -= 20;
+            if (isLagError) {
+                // Show value for (nextAnalog - direction) -> effectively previous position
+                let prevPos = nextAnalog - directionRef.current;
+                if (prevPos > 36) prevPos = 1;
+                if (prevPos < 1) prevPos = 36;
+                nextDigital = prevPos * 10;
+            } else {
+                 // Random wrong number
+                 const offset = Math.random() < 0.5 ? -10 : 10;
+                 nextDigital += offset;
+            }
+
+            // Boundary checks for digital
+            if (nextDigital < 0) nextDigital += 360; // loose wrapping
             
-            // Also update stats that a mismatch event occurred?
-            // Wait, how do we track "Missed" events?
-            // If user didn't click on previous mismatch, it's a miss.
-            // But we don't have "previous state was mismatch" easily accessible here without ref or tracking.
+            // Avoid accidental match (rare but possible with wrapping logic)
+            if (nextDigital === nextAnalog * 10) nextDigital += 10;
+
+            setTotalEvents(prev => prev + 1);
         }
 
         setDigitalValue(nextDigital);
         return nextAnalog;
     });
-
   }, []);
 
   const startGame = () => {
@@ -73,11 +77,18 @@ export const useVIGI1GameLogic = () => {
     setTotalEvents(0);
     setCaughtEvents(0);
     setWrongMoves(0);
-    setAnalogValue(36);
-    setDigitalValue(360);
+    
+    // Random start position
+    const startPos = Math.floor(Math.random() * 36) + 1;
+    setAnalogValue(startPos);
+    setDigitalValue(startPos * 10);
+    
+    // Initialize movement
+    directionRef.current = 1; 
+    stepsUntilTurnRef.current = Math.floor(Math.random() * 5) + 3;
 
     // Game Loop
-    updateIntervalRef.current = setInterval(generateNextState, UPDATE_SPEED);
+    updateIntervalRef.current = setInterval(updateGameLoop, UPDATE_SPEED);
 
     // Timer
     timerRef.current = setInterval(() => {

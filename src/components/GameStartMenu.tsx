@@ -9,6 +9,7 @@ interface GameStartMenuProps {
   onTutorial?: () => void;
   startLabel?: string;
   highScore?: number | string;
+  children?: React.ReactNode;
 }
 
 export const GameStartMenu: React.FC<GameStartMenuProps> = ({ 
@@ -18,7 +19,8 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
   onBack,
   onTutorial,
   startLabel = "START GAME",
-  highScore
+  highScore,
+  children
 }) => {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-50">
@@ -45,6 +47,8 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
              High Score: <span className="text-yellow-400 font-bold">{highScore}</span>
            </div>
         )}
+
+        {children}
 
         <button 
           onClick={onStart}

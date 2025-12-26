@@ -12,7 +12,7 @@ interface VIGI1GameProps {
 
 const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
   const { gameState, actions } = useVIGI1GameLogic();
-  const { isPlaying, score, gameTime, analogValue, digitalValue } = gameState;
+  const { isPlaying, score, gameTime, analogValue, digitalValue, totalEvents, caughtEvents, wrongMoves } = gameState;
   const { startGame, handleEyeClick } = actions;
   
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
@@ -75,12 +75,12 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
         title="VIGI 1 (Audio-Visual Vigilance)"
         description="Monitor the gauge and digital display for discrepancies."
         rules={[
-          "The analog needle moves around the gauge (1-36).",
-          "The digital display shows a number in the center.",
-          "Ideally, Digital Value = Analog Value × 10 (e.g., 3 -> 030).",
-          "If the values DO NOT match (e.g., Needle at 33, Display 320), press the EYE button.",
-          "If they match (e.g., Needle at 33, Display 330), DO NOT press the button.",
-          "Be quick and accurate!"
+          "The analog needle moves randomly (Clockwise/Counter-clockwise).",
+          "The digital display should show: Analog Value × 10 (e.g., 3 -> 030).",
+          "MISMATCH EXAMPLE: Needle moves to 6, but Digital shows 50 (stuck on previous value).",
+          "If the values DO NOT match, press the EYE button immediately.",
+          "If they match, DO NOT press the button.",
+          "Be quick! The mismatch disappears with the next movement."
         ]}
         controls={[
           { key: "EYE Button", action: "Report Visual Mismatch", icon: <Eye /> },
@@ -99,7 +99,30 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
                 onBack={onExit}
                 highScore={0} // TODO: Persist high score
                 onTutorial={() => setIsTutorialOpen(true)}
-            />
+            >
+                {gameTime > 0 && (
+                    <div className="grid grid-cols-2 gap-3 mb-4 w-full">
+                        <div className="bg-gray-700 p-3 rounded-lg text-center">
+                            <div className="text-xs text-gray-400 uppercase tracking-wider">Accuracy</div>
+                            <div className="text-2xl font-bold text-green-400">
+                                {totalEvents > 0 ? Math.round((caughtEvents / totalEvents) * 100) : 0}%
+                            </div>
+                        </div>
+                         <div className="bg-gray-700 p-3 rounded-lg text-center">
+                            <div className="text-xs text-gray-400 uppercase tracking-wider">Score</div>
+                            <div className="text-2xl font-bold text-yellow-400">{score}</div>
+                        </div>
+                        <div className="bg-gray-700 p-3 rounded-lg text-center">
+                            <div className="text-xs text-gray-400 uppercase tracking-wider">Caught</div>
+                            <div className="text-lg font-bold text-white">{caughtEvents} / {totalEvents}</div>
+                        </div>
+                        <div className="bg-gray-700 p-3 rounded-lg text-center">
+                            <div className="text-xs text-gray-400 uppercase tracking-wider">False Alarms</div>
+                            <div className="text-lg font-bold text-red-400">{wrongMoves}</div>
+                        </div>
+                    </div>
+                )}
+            </GameStartMenu>
         </div>
       )}
 
