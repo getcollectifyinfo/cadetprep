@@ -17,6 +17,7 @@ export const useVIGI1GameLogic = () => {
   const [audioEvents, setAudioEvents] = useState(0); // Total audio targets (3 in a row)
   const [caughtAudio, setCaughtAudio] = useState(0); // Correctly identified
   const [wrongAudio, setWrongAudio] = useState(0); // False alarms
+  const [audioDifficulty, setAudioDifficulty] = useState(5); // 1-10, controls repetition frequency
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const updateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -46,12 +47,27 @@ export const useVIGI1GameLogic = () => {
     }
     canClickAudioRef.current = true; // Reset clickability for next sound window
 
-    const randomTone = TONES[Math.floor(Math.random() * TONES.length)];
+    let randomTone = TONES[Math.floor(Math.random() * TONES.length)];
+    
+    // Apply Audio Difficulty Bias
+    // Difficulty 1-10. Higher difficulty -> Higher chance of repeating the last tone.
+    // This naturally increases the probability of 3-in-a-row sequences.
+    const history = toneHistoryRef.current;
+    if (history.length > 0) {
+        const lastTone = history[history.length - 1];
+        // Calculate forced repeat chance: 0.0 (Diff 1) to ~0.45 (Diff 10)
+        // Base 1/3 chance + Boost
+        const forcedRepeatChance = (audioDifficulty - 1) * 0.05; 
+        
+        if (Math.random() < forcedRepeatChance) {
+            randomTone = lastTone;
+        }
+    }
+
     const audio = new Audio(`/${randomTone}.m4a`);
     audio.play().catch(e => console.error("Audio play failed", e));
 
     // Update history
-    const history = toneHistoryRef.current;
     history.push(randomTone);
     if (history.length > 3) history.shift(); // Keep last 3
 
@@ -74,7 +90,7 @@ export const useVIGI1GameLogic = () => {
             toneHistoryRef.current = []; 
         }
     }
-  }, []);
+  }, [audioDifficulty]);
 
 
   // Refactored State Update Logic to ensure synchronization
@@ -232,14 +248,16 @@ export const useVIGI1GameLogic = () => {
       wrongMoves,
       audioEvents,
       caughtAudio,
-      wrongAudio
+      wrongAudio,
+      audioDifficulty
     },
     actions: {
       startGame,
       stopGame,
       handleEyeClick,
       handleNoteClick,
-      setGameDuration
+      setGameDuration,
+      setAudioDifficulty
     }
   };
 };

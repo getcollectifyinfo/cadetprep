@@ -25,9 +25,10 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
       wrongMoves,
       audioEvents,
       caughtAudio,
-      wrongAudio 
+      wrongAudio,
+      audioDifficulty
   } = gameState;
-  const { startGame, handleEyeClick, handleNoteClick, setGameDuration } = actions;
+  const { startGame, handleEyeClick, handleNoteClick, setGameDuration, setAudioDifficulty } = actions;
   
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -163,19 +164,33 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
         title="VIGI 1 Settings"
       >
         <SettingsSection title="Game Duration">
-            <SettingsLabel>Duration (Minutes)</SettingsLabel>
-            <SettingsRange 
-                value={gameDuration / 60}
-                min={1}
-                max={10}
-                step={1}
-                onChange={(val) => setGameDuration(val * 60)}
-                leftLabel="1 min"
-                rightLabel="10 min"
-                valueLabel={`${gameDuration / 60} min`}
-            />
-        </SettingsSection>
-      </GameSettingsModal>
+                    <SettingsLabel>Duration (Minutes)</SettingsLabel>
+                    <SettingsRange 
+                        value={gameDuration / 60}
+                        min={1}
+                        max={10}
+                        step={1}
+                        onChange={(val) => setGameDuration(val * 60)}
+                        leftLabel="1 min"
+                        rightLabel="10 min"
+                        valueLabel={`${gameDuration / 60} min`}
+                    />
+                </SettingsSection>
+                
+                <SettingsSection title="Audio Challenge">
+                    <SettingsLabel>Same Tone Frequency</SettingsLabel>
+                    <SettingsRange 
+                        value={audioDifficulty}
+                        min={1}
+                        max={10}
+                        step={1}
+                        onChange={setAudioDifficulty}
+                        leftLabel="Low"
+                        rightLabel="High"
+                        valueLabel={`${audioDifficulty}`}
+                    />
+                </SettingsSection>
+            </GameSettingsModal>
 
     </div>
   );
