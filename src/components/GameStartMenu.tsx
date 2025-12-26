@@ -34,6 +34,10 @@ export const GameStartMenu: React.FC<GameStartMenuProps> = ({
           </button>
         )}
 
+        <div className="flex justify-center -mb-2">
+          <img src="/logo.png" alt="Logo" className="h-20 drop-shadow-lg" />
+        </div>
+
         <h1 className="text-4xl font-bold text-center text-white mb-2 tracking-wider">{title}</h1>
         
         {highScore !== undefined && (

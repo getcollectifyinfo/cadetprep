@@ -51,7 +51,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         </button>
       )}
 
-      <h1 className="text-6xl font-bold text-white mb-8 tracking-wider">SKYTEST SIMULATION</h1>
+      <div className="flex flex-col items-center">
+        <img src="/logo.png" alt="CadetPrep Academy" className="h-32 mb-6 drop-shadow-2xl" />
+        <h1 className="text-6xl font-bold text-white mb-8 tracking-wider">SKYTEST SIMULATION</h1>
+      </div>
       
       <div className="flex gap-16">
         {/* WORM Button */}
