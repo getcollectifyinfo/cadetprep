@@ -170,7 +170,7 @@ function App() {
       }
     }
     return null; // No path found
-  }, []);
+  }, [getNormalizedRotation]);
 
   // Generate a mission using Smart Target Search (Flood Fill)
   const generateMission = useCallback((startPos: Position, startRot: number): { target: Position, instructions: MissionStep[] } | null => {
@@ -330,7 +330,7 @@ function App() {
     }
     
     return null;
-  }, [difficulty]);
+  }, [difficulty, getNormalizedRotation]);
 
   // Wrapper to handle fallbacks
   const getMission = useCallback((startPos: Position, startRot: number) => {
