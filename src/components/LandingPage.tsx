@@ -65,7 +65,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
           <div className="p-6 bg-green-500 rounded-full group-hover:scale-110 transition-transform duration-300">
             <Gamepad2 size={64} className="text-white" />
           </div>
-          <span className="text-3xl font-bold text-white tracking-widest group-hover:text-green-400">WORM</span>
+          <div className="flex flex-col items-center">
+            <span className="text-3xl font-bold text-white tracking-widest group-hover:text-green-400">WORM</span>
+            <span className="text-sm font-medium text-gray-400 mt-2 group-hover:text-green-300">Grid Orientation Test</span>
+          </div>
         </button>
 
         {/* IPP Button */}
