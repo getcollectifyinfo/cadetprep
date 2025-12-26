@@ -45,8 +45,8 @@ export const useGameLogic = () => {
   const [settings, setSettings] = useState<Settings>(INITIAL_SETTINGS);
 
   // Refs for loop
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const loopRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startGame = () => {
     setIsPlaying(true);
