@@ -10,7 +10,7 @@ import CapacityGame from './components/Capacity/CapacityGame';
 import { GameStartMenu } from './components/GameStartMenu';
 import { GameTutorial } from './components/GameTutorial';
 import { GRID_SIZE, DIFFICULTY_SETTINGS } from './types';
-import type { Position, LogEntry, MissionStep, GameMode, ExamState, ExamOption, DifficultyLevel } from './types';
+import type { Position, LogEntry, MissionStep, GameMode, ExamState, ExamOption, DifficultyLevel, Page } from './types';
 
 const MOTIVATIONAL_MESSAGES = [
   "UMAY, YOU ARE GREAT!",
@@ -26,6 +26,10 @@ import { LandingPage } from './components/LandingPage';
 import { MarketingPage } from './components/MarketingPage';
 import { StatisticsPage } from './components/StatisticsPage';
 import { SkytestPage } from './components/SkytestPage';
+import { MollymawkPage } from './components/MollymawkPage';
+import { SkytestBlogPage } from './components/SkytestBlogPage';
+import { SkytestPegasusBlogPage } from './components/SkytestPegasusBlogPage';
+import { MollymawkBlogPage } from './components/MollymawkBlogPage';
 // import { AuthPage } from './components/Auth/AuthPage';
 import { useAuth } from './hooks/useAuth';
 import { Loader2 } from 'lucide-react';
@@ -36,9 +40,56 @@ function App() {
   const { user, loading, signOut } = useAuth();
   const [startTime, setStartTime] = useState<number>(0);
   // Navigation State
-  const [currentPage, setCurrentPage] = useState<'MARKETING' | 'LANDING' | 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'STATISTICS' | 'SKYTEST_PRODUCT'>('MARKETING');
+  const [currentPage, setCurrentPage] = useState<Page>(() => {
+    // Simple URL check for initial state
+    if (typeof window !== 'undefined' && window.location.pathname === '/skytest-nedir') {
+      return 'SKYTEST_BLOG_1';
+    }
+    if (typeof window !== 'undefined' && window.location.pathname === '/skytest-pegasus') {
+      return 'SKYTEST_PEGASUS_BLOG';
+    }
+    if (typeof window !== 'undefined' && window.location.pathname === '/mollymawk-nedir') {
+      return 'MOLLYMAWK_BLOG_1';
+    }
+    if (typeof window !== 'undefined' && window.location.pathname === '/mollymawk') {
+      return 'MOLLYMAWK_PRODUCT';
+    }
+    return 'MARKETING';
+  });
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      if (window.location.pathname === '/skytest-nedir') {
+        setCurrentPage('SKYTEST_BLOG_1');
+      } else if (window.location.pathname === '/mollymawk-nedir') {
+        setCurrentPage('MOLLYMAWK_BLOG_1');
+      } else if (window.location.pathname === '/') {
+        setCurrentPage('MARKETING');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Update URL when page changes (for internal navigation)
+  useEffect(() => {
+    if (currentPage === 'SKYTEST_BLOG_1' && window.location.pathname !== '/skytest-nedir') {
+      window.history.pushState(null, '', '/skytest-nedir');
+    } else if (currentPage === 'SKYTEST_PEGASUS_BLOG' && window.location.pathname !== '/skytest-pegasus') {
+      window.history.pushState(null, '', '/skytest-pegasus');
+    } else if (currentPage === 'MOLLYMAWK_BLOG_1' && window.location.pathname !== '/mollymawk-nedir') {
+      window.history.pushState(null, '', '/mollymawk-nedir');
+    } else if (currentPage === 'MOLLYMAWK_PRODUCT' && window.location.pathname !== '/mollymawk') {
+      window.history.pushState(null, '', '/mollymawk');
+    } else if (currentPage === 'MARKETING' && window.location.pathname !== '/') {
+      window.history.pushState(null, '', '/');
+    }
+    // For other pages, we might want to stay on root or have specific URLs, but for now only handling these two explicitly asked ones.
+  }, [currentPage]);
 
   // Reset game started when page changes
   useEffect(() => {
@@ -650,6 +701,29 @@ function App() {
       <MarketingPage 
         onStartDemo={() => setCurrentPage('LANDING')} 
         onViewProduct={() => setCurrentPage('SKYTEST_PRODUCT')}
+        onViewMollymawk={() => setCurrentPage('MOLLYMAWK_PRODUCT')}
+      />
+    );
+  }
+
+  if (currentPage === 'SKYTEST_BLOG_1') {
+    return <SkytestBlogPage onNavigate={(page) => setCurrentPage(page as Page)} />;
+  }
+
+  if (currentPage === 'SKYTEST_PEGASUS_BLOG') {
+    return <SkytestPegasusBlogPage onNavigate={(page) => setCurrentPage(page as Page)} />;
+  }
+
+  if (currentPage === 'MOLLYMAWK_BLOG_1') {
+    return <MollymawkBlogPage onNavigate={(page) => setCurrentPage(page as Page)} />;
+  }
+
+  if (currentPage === 'MOLLYMAWK_PRODUCT') {
+    return (
+      <MollymawkPage 
+        onBack={() => setCurrentPage('MARKETING')}
+        onStartFree={() => setCurrentPage('LANDING')}
+        onBuy={() => alert('Ödeme sistemi yakında aktif olacak!')}
       />
     );
   }

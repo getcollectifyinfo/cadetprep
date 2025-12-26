@@ -38,3 +38,18 @@ export const DIFFICULTY_SETTINGS: Record<DifficultyLevel, { min: number; max: nu
 };
 
 export const GRID_SIZE = 8;
+
+export type Page = 
+  | 'MARKETING' 
+  | 'LANDING' 
+  | 'WORM' 
+  | 'IPP' 
+  | 'VIGI' 
+  | 'CAPACITY' 
+  | 'VIGI1' 
+  | 'STATISTICS' 
+  | 'SKYTEST_PRODUCT' 
+  | 'SKYTEST_BLOG_1' 
+  | 'SKYTEST_PEGASUS_BLOG' 
+  | 'MOLLYMAWK_BLOG_1' 
+  | 'MOLLYMAWK_PRODUCT';

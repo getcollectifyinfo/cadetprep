@@ -5,9 +5,10 @@ import { NewsletterModal } from './NewsletterModal';
 interface MarketingPageProps {
   onStartDemo: () => void;
   onViewProduct: () => void;
+  onViewMollymawk: () => void;
 }
 
-export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onViewProduct }) => {
+export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onViewProduct, onViewMollymawk }) => {
   const [newsletterOpen, setNewsletterOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState('');
 
@@ -223,28 +224,32 @@ export const MarketingPage: React.FC<MarketingPageProps> = ({ onStartDemo, onVie
                </button>
              </div>
 
-             {/* Mollymawk (Coming Soon) */}
-             <div className="p-8 rounded-2xl bg-white/5 border border-white/10 flex flex-col opacity-70 hover:opacity-100 transition-opacity">
+             {/* Mollymawk (Live) */}
+             <div className="p-8 rounded-2xl bg-orange-600/20 border border-orange-500/50 flex flex-col relative transition-all hover:scale-[1.02]">
+               <div className="absolute top-0 right-0 bg-orange-500 text-xs font-bold px-3 py-1 rounded-bl-lg">YENİ</div>
                <div className="mb-6">
-                 <div className="flex justify-between items-start">
-                    <div className="text-teal-400 font-bold mb-2">Mollymawk</div>
-                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded">YAKINDA</span>
-                 </div>
-                 <div className="text-3xl font-bold">---</div>
+                 <div className="text-orange-400 font-bold mb-2">Mollymawk Paketi</div>
+                 <div className="text-3xl font-bold">499 TL <span className="text-lg text-gray-400 font-normal">/ Ay</span></div>
                </div>
                <ul className="space-y-4 mb-8 flex-1">
-                 <li className="flex items-center gap-2 text-sm text-gray-500">
-                   <Check size={16} className="text-gray-600" /> SunExpress Süreci
+                 <li className="flex items-center gap-2 text-sm text-gray-300">
+                   <Check size={16} className="text-orange-400" /> SunExpress Süreci
                  </li>
-                 <li className="flex items-center gap-2 text-sm text-gray-500">
-                   <Check size={16} className="text-gray-600" /> Bilişsel Testler
+                 <li className="flex items-center gap-2 text-sm text-gray-300">
+                   <Check size={16} className="text-orange-400" /> Bilişsel Testler
+                 </li>
+                 <li className="flex items-center gap-2 text-sm text-gray-300">
+                   <Check size={16} className="text-orange-400" /> Gerçekçi Simülasyon
+                 </li>
+                 <li className="flex items-center gap-2 text-sm text-gray-300">
+                   <Check size={16} className="text-orange-400" /> Detaylı Analiz
                  </li>
                </ul>
                <button 
-                 onClick={() => openNewsletter('Mollymawk')}
-                 className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-lg font-bold transition-colors"
+                 onClick={onViewMollymawk}
+                 className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-orange-600/20"
                >
-                 Haber Ver
+                 Paketi İncele
                </button>
              </div>
 
