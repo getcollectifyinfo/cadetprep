@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn } from 'lucide-react';
+import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { AuthPage } from './Auth/AuthPage';
 
 interface LandingPageProps {
-  onSelectGame: (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY') => void;
+  onSelectGame: (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1') => void;
   onSignOut: () => void;
   user: User | null;
 }
@@ -80,6 +80,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
             <Gauge size={64} className="text-white" />
           </div>
           <span className="text-3xl font-bold text-white tracking-widest group-hover:text-blue-400">IPP</span>
+        </button>
+
+        {/* VIGI 1 Button */}
+        <button 
+          onClick={() => onSelectGame('VIGI1')}
+          className="group flex flex-col items-center gap-6 p-12 bg-gray-800 rounded-2xl border-4 border-transparent hover:border-orange-500 hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-2 shadow-xl"
+        >
+          <div className="p-6 bg-orange-500 rounded-full group-hover:scale-110 transition-transform duration-300">
+            <Eye size={64} className="text-white" />
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-3xl font-bold text-white tracking-widest group-hover:text-orange-400">VIGI 1</span>
+            <span className="text-sm font-medium text-gray-400 mt-2 group-hover:text-orange-300">Audio-Visual Vigilance</span>
+          </div>
         </button>
 
         {/* VIGI Button */}

@@ -33,7 +33,7 @@ function App() {
   const { user, loading, signOut } = useAuth();
   const [startTime, setStartTime] = useState<number>(0);
   // Navigation State
-  const [currentPage, setCurrentPage] = useState<'MARKETING' | 'LANDING' | 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY'>('MARKETING');
+  const [currentPage, setCurrentPage] = useState<'MARKETING' | 'LANDING' | 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1'>('MARKETING');
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
