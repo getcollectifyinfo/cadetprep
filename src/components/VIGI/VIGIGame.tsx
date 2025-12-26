@@ -126,14 +126,23 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
         </div>
       </div>
 
-      {/* Settings Button (Only when not playing) */}
+      {/* Settings & Tutorial Buttons (Only when not playing) */}
       {!isPlaying && (
-        <button 
-          onClick={() => setShowSettings(!showSettings)}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white z-20"
-        >
-          ⚙️
-        </button>
+        <div className="absolute top-4 right-4 flex gap-2 z-20">
+            <button 
+              onClick={() => setIsTutorialOpen(true)}
+              className="p-2 text-gray-400 hover:text-white"
+              title="How to Play"
+            >
+              <span className="text-2xl font-bold">?</span>
+            </button>
+            <button 
+              onClick={() => setShowSettings(!showSettings)}
+              className="p-2 text-gray-400 hover:text-white"
+            >
+              ⚙️
+            </button>
+        </div>
       )}
 
       {/* Pause/Resume Button (Only when playing) */}

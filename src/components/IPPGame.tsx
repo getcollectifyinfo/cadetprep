@@ -566,6 +566,14 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
       {/* Top Right Controls */}
       <div className="absolute top-8 right-8 z-40 flex flex-col gap-4">
         <button 
+            onClick={() => setIsTutorialOpen(true)}
+            className="p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-lg hover:bg-white/20 transition-all hover:scale-110 group relative border border-white/20"
+            title="How to Play"
+        >
+            <span className="text-xl font-bold text-white">?</span>
+        </button>
+
+        <button 
             onClick={() => setIsSettingsOpen(true)}
             className="p-3 bg-white/10 backdrop-blur-sm rounded-full shadow-lg hover:bg-white/20 transition-all hover:scale-110 group relative border border-white/20"
             title="Settings"

@@ -712,6 +712,18 @@ function App() {
               
               {/* Top Right Controls */}
               <div className="fixed top-4 right-4 z-[60] flex flex-col gap-3">
+                  {/* Tutorial Button */}
+                  <button 
+                      onClick={() => setIsTutorialOpen(true)}
+                      className="p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110 group relative"
+                      title="How to Play"
+                  >
+                      <span className="text-xl font-bold text-gray-700">?</span>
+                      <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                          How to Play
+                      </span>
+                  </button>
+
                   {/* Settings Button */}
                   <button 
                       onClick={() => setIsSettingsOpen(true)}

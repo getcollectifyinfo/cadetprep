@@ -206,15 +206,25 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
 
       {/* Back Button for Navigation - Only show when not in menu (GameStartMenu has its own back) */}
       {gameState !== 'menu' && (
-        <button 
-          onClick={onExit}
-          className="fixed top-4 left-4 z-[2000] p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110"
-          title="Back to Main Menu"
-        >
-           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-        </button>
+        <>
+            <button 
+              onClick={onExit}
+              className="fixed top-4 left-4 z-[2000] p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110"
+              title="Back to Main Menu"
+            >
+               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            
+            <button 
+              onClick={() => setIsTutorialOpen(true)}
+              className="fixed top-4 right-4 z-[2000] p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110 font-bold text-xl w-10 h-10 flex items-center justify-center text-gray-700"
+              title="How to Play"
+            >
+               ?
+            </button>
+        </>
       )}
 
       {gameState === 'menu' && !showSettings && (
