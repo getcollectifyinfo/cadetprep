@@ -5,6 +5,7 @@ import { LogPanel } from './components/LogPanel';
 import { MissionPanel } from './components/MissionPanel';
 import { IPPGame } from './components/IPPGame';
 import VIGIGame from './components/VIGI/VIGIGame';
+import VIGI1Game from './components/VIGI1/VIGI1Game';
 import CapacityGame from './components/Capacity/CapacityGame';
 import { GameStartMenu } from './components/GameStartMenu';
 import { GameTutorial } from './components/GameTutorial';
@@ -652,6 +653,10 @@ function App() {
 
   if (currentPage === 'VIGI') {
     return <VIGIGame onExit={() => setCurrentPage('LANDING')} />;
+  }
+
+  if (currentPage === 'VIGI1') {
+    return <VIGI1Game onExit={() => setCurrentPage('LANDING')} />;
   }
 
   if (currentPage === 'CAPACITY') {
