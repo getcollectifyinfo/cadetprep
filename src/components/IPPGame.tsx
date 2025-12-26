@@ -42,12 +42,20 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const [gameDuration, setGameDuration] = useState(2); // Minutes
   const [ruleChangeFreq, setRuleChangeFreq] = useState(3); // 1-5 scale
 
-  // Update timer when duration changes (only if not started)
+  const [showHint, setShowHint] = useState(false);
+  const [hintText, setHintText] = useState('');
+  const showHintRef = useRef(showHint);
+  
   useEffect(() => {
+    showHintRef.current = showHint;
+  }, [showHint]);
+
+  const handleDurationChange = (newDuration: number) => {
+    setGameDuration(newDuration);
     if (!hasStarted) {
-        setTimer(gameDuration * 60);
+        setTimer(newDuration * 60);
     }
-  }, [gameDuration, hasStarted]);
+  };
 
   useEffect(() => {
     assignmentsRef.current = assignments;
@@ -254,8 +262,6 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     setCalcState('FEEDBACK');
   };
 
-  const [showHint, setShowHint] = useState(false);
-  const [hintText, setHintText] = useState('');
   const [stats, setStats] = useState<GameStats>({ correct: 0, wrong: 0 });
   const [startTime, setStartTime] = useState(0);
 
@@ -314,9 +320,6 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     isMathBusyRef.current = isMathBusy;
   }, [isMathBusy]);
   
-  const showHintRef = useRef(showHint);
-  showHintRef.current = showHint; // Sync render value to ref
-
   // Show hint on initial mount (only if started)
   useEffect(() => {
     if (!hasStarted) return;
@@ -628,7 +631,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
                 max={12}
                 step={1}
                 value={gameDuration}
-                onChange={setGameDuration}
+                onChange={handleDurationChange}
                 leftLabel="2m"
                 rightLabel="12m"
                 valueLabel={

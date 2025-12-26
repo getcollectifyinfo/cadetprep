@@ -26,7 +26,7 @@ import { LandingPage } from './components/LandingPage';
 import { MarketingPage } from './components/MarketingPage';
 import { StatisticsPage } from './components/StatisticsPage';
 // import { AuthPage } from './components/Auth/AuthPage';
-import { useAuth } from './contexts/AuthContext';
+import { useAuth } from './hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 
 import { statsService } from './services/statsService';

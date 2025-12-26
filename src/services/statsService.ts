@@ -6,7 +6,7 @@ export interface GameSession {
   game_type: GameType;
   score: number;
   duration_seconds: number;
-  metadata?: Record<string, any>; // For game-specific stats
+  metadata?: Record<string, unknown>; // For game-specific stats
   started_at?: string;
 }
 
