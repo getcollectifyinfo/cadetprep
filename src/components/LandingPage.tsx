@@ -1,13 +1,56 @@
-import React from 'react';
-import { Gamepad2, Gauge, Zap, Brain } from 'lucide-react';
+import React, { useState } from 'react';
+import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn } from 'lucide-react';
+import type { User } from '@supabase/supabase-js';
+import { AuthPage } from './Auth/AuthPage';
 
 interface LandingPageProps {
   onSelectGame: (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY') => void;
+  onSignOut: () => void;
+  user: User | null;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOut, user }) => {
+  const [showAuth, setShowAuth] = useState(false);
+
+  if (showAuth) {
+    return (
+      <div className="relative">
+        <button 
+          onClick={() => setShowAuth(false)}
+          className="absolute top-4 left-4 z-50 text-white hover:text-gray-300"
+        >
+          ← Back
+        </button>
+        <AuthPage onSuccess={() => setShowAuth(false)} />
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full h-screen bg-[#1a1a1a] flex flex-col items-center justify-center gap-12 p-8">
+    <div className="w-full h-screen bg-[#1a1a1a] flex flex-col items-center justify-center gap-12 p-8 relative">
+      {user ? (
+        <div className="absolute top-8 right-8 flex items-center gap-4">
+          <span className="text-gray-400 text-sm">
+            {user.email}
+          </span>
+          <button
+            onClick={onSignOut}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 transition-colors"
+          >
+            <LogOut size={20} />
+            <span className="font-bold">Sign Out</span>
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowAuth(true)}
+          className="absolute top-8 right-8 flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition-colors"
+        >
+          <LogIn size={20} />
+          <span className="font-bold">Sign In</span>
+        </button>
+      )}
+
       <h1 className="text-6xl font-bold text-white mb-8 tracking-wider">SKYTEST SIMULATION</h1>
       
       <div className="flex gap-16">

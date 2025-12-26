@@ -6,6 +6,7 @@ import SettingsMenu from './SettingsMenu';
 import type { CapacitySettings, CapacityStats } from './types';
 import { GameStartMenu } from '../GameStartMenu';
 import { GameTutorial } from '../GameTutorial';
+import { statsService } from '../../services/statsService';
 
 interface CapacityGameProps {
   onExit: () => void;
@@ -27,6 +28,8 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
   
   const [diceStats, setDiceStats] = useState<CapacityStats>({ hits: 0, targets: 0, fails: 0 });
   const [rodStats, setRodStats] = useState<CapacityStats>({ hits: 0, targets: 0, fails: 0 });
+  
+  const [startTime, setStartTime] = useState(0);
 
   // Pause & Settings
   const [isPaused, setIsPaused] = useState(false);
@@ -118,12 +121,36 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
     setRodStats({ hits: 0, targets: 0, fails: 0 });
     
     setIsPaused(false);
+    setStartTime(Date.now());
     
     setGameState('reference');
     // Reference phase 2 seconds, then running
     setTimeout(() => {
         setGameState('running');
     }, 2000);
+  };
+
+  // Handle Game Finish
+  const finishGame = async () => {
+      setGameState('finished');
+      
+      const endTime = Date.now();
+      const duration = (endTime - startTime) / 1000;
+      
+      // Calculate total score
+      const totalHits = diceStats.hits + rodStats.hits;
+      
+      await statsService.saveSession({
+          game_type: 'CAPACITY',
+          score: totalHits,
+          duration_seconds: duration,
+          metadata: {
+              flight_fails: flightFails,
+              total_obstacles: totalObstacles,
+              dice_stats: diceStats,
+              rod_stats: rodStats
+          }
+      });
   };
 
   // Timer
@@ -138,7 +165,7 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
             }
 
             if (prev <= 1) {
-                setGameState('finished');
+                finishGame();
                 return 0;
             }
             return prev - 1;
@@ -146,7 +173,7 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [gameState, isPaused, gameMode, settings.gameDuration]);
+  }, [gameState, isPaused, gameMode, settings.gameDuration, startTime, diceStats, rodStats, flightFails, totalObstacles]);
 
   const handleRestart = () => {
       // Instead of reload, we reset to menu

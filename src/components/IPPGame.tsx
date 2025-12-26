@@ -3,6 +3,7 @@ import { Gauge } from './Gauge';
 import { GameStartMenu } from './GameStartMenu';
 import { GameTutorial } from './GameTutorial';
 import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from './GameSettingsModal';
+import { statsService } from '../services/statsService';
 
 interface IPPGameProps {
   onExit: () => void;
@@ -256,6 +257,32 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const [showHint, setShowHint] = useState(false);
   const [hintText, setHintText] = useState('');
   const [stats, setStats] = useState<GameStats>({ correct: 0, wrong: 0 });
+  const [startTime, setStartTime] = useState(0);
+
+  // Handle Game End
+  const handleGameEnd = useCallback(async () => {
+    setGameOver(true);
+    setHasStarted(false);
+
+    const endTime = Date.now();
+    const duration = (endTime - startTime) / 1000;
+    const totalQuestions = stats.correct + stats.wrong;
+    const score = stats.correct;
+
+    await statsService.saveSession({
+        game_type: 'IPP',
+        score: score,
+        duration_seconds: duration,
+        metadata: {
+            difficulty: difficulty,
+            total_questions: totalQuestions,
+            wrong_answers: stats.wrong,
+            correct_answers: stats.correct
+        }
+    });
+
+  }, [stats, startTime, difficulty]);
+
   const [gaugeLocks, setGaugeLocks] = useState<{ [key in GaugeId]: boolean }>({ left: false, top: false, right: false });
   
   // Reaction time tracking
@@ -365,21 +392,38 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     };
   }, [gameOver, triggerHint, hasStarted, isSettingsOpen]);
 
-  // Timer
+  // Timer Effect
   useEffect(() => {
-    if (!hasStarted || gameOver || isSettingsOpen) return;
-    const interval = setInterval(() => {
-      setTimer(prev => {
-        if (prev <= 0) {
-          clearInterval(interval);
-          setGameOver(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    let interval: ReturnType<typeof setInterval>;
+    if (hasStarted && !gameOver && !isSettingsOpen) {
+      interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            handleGameEnd();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
     return () => clearInterval(interval);
-  }, [gameOver, hasStarted, isSettingsOpen]);
+  }, [hasStarted, gameOver, isSettingsOpen, handleGameEnd]);
+
+  // Start Game
+  const handleStart = () => {
+    setHasStarted(true);
+    setGameOver(false);
+    setStats({ correct: 0, wrong: 0 });
+    setTimer(gameDuration * 60);
+    setStartTime(Date.now());
+    
+    // Reset Calc State
+    setCalcState('IDLE');
+    setCalcTotal(0);
+    setDisplayedNumber(null);
+    setCalcInput('');
+    setCalcFeedback(null);
+  };
 
   // Exit on Escape key
   useEffect(() => {

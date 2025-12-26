@@ -4,6 +4,7 @@ import { useGameLogic } from './useVIGIGameLogic';
 import { GameStartMenu } from '../GameStartMenu';
 import { GameTutorial } from '../GameTutorial';
 import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from '../GameSettingsModal';
+import { statsService } from '../../services/statsService';
 
 interface VIGIGameProps {
   onExit: () => void;
@@ -66,8 +67,22 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
     setShowSettings(true);
   };
 
-  const handleQuitFromPause = () => {
+  const handleQuitFromPause = async () => {
     stopGame();
+    
+    // Save Stats
+    await statsService.saveSession({
+        game_type: 'VIGI',
+        score: score,
+        duration_seconds: gameTime,
+        metadata: {
+            level: level.name,
+            total_events: totalEvents,
+            caught_events: caughtEvents,
+            wrong_moves: wrongMoves
+        }
+    });
+
     setShowPauseMenu(false);
     onExit();
   };

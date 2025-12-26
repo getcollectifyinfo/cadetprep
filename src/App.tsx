@@ -22,8 +22,15 @@ const MOTIVATIONAL_MESSAGES = [
 ];
 
 import { LandingPage } from './components/LandingPage';
+import { AuthPage } from './components/Auth/AuthPage';
+import { useAuth } from './contexts/AuthContext';
+import { Loader2 } from 'lucide-react';
+
+import { statsService } from './services/statsService';
 
 function App() {
+  const { user, loading, signOut } = useAuth();
+  const [startTime, setStartTime] = useState<number>(0);
   // Navigation State
   const [currentPage, setCurrentPage] = useState<'LANDING' | 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY'>('LANDING');
   const [isGameStarted, setIsGameStarted] = useState(false);
@@ -76,8 +83,17 @@ function App() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [pressedKey, setPressedKey] = useState<string | null>(null);
 
+  const handleSettingsClose = () => {
+    setIsSettingsOpen(false);
+    if (gameMode === 'PRACTISE') {
+        setTimeout(() => {
+            startPractiseMission(position, rotation);
+        }, 0);
+    }
+  };
+
   // Helper to get normalized rotation (0, 90, 180, 270)
-  const getNormalizedRotation = (rot: number) => ((rot % 360) + 360) % 360;
+  const getNormalizedRotation = useCallback((rot: number) => ((rot % 360) + 360) % 360, []);
 
   // BFS to find shortest path instructions
   const findShortestPath = useCallback((startPos: Position, startRot: number, targetPos: Position): MissionStep[] | null => {
@@ -452,6 +468,7 @@ function App() {
   const startExamSession = useCallback(() => {
       setCorrectAnswersCount(0);
       setCurrentQuestionNumber(1);
+      setStartTime(Date.now());
       startExam();
   }, [startExam]);
 
@@ -470,11 +487,24 @@ function App() {
       setExamState('RESULT');
   };
 
-  const handleNextExam = () => {
+  const handleNextExam = async () => {
       if (currentQuestionNumber < totalQuestions) {
           setCurrentQuestionNumber(prev => prev + 1);
           startExam();
       } else {
+          const endTime = Date.now();
+          const duration = (endTime - startTime) / 1000;
+
+          await statsService.saveSession({
+            game_type: 'WORM',
+            score: correctAnswersCount,
+            duration_seconds: duration,
+            metadata: {
+              total_questions: totalQuestions,
+              difficulty: difficulty
+            }
+          });
+
           setExamState('SESSION_FINISHED');
       }
   };
@@ -594,20 +624,25 @@ function App() {
     };
   }, [handleKeyDown, handleKeyUp]);
 
-  const handleSettingsClose = () => {
-    setIsSettingsOpen(false);
-    if (gameMode === 'PRACTISE') {
-        // Regenerate mission with new difficulty settings
-        // We use a timeout to allow state to settle if needed, though usually not required for synchronous updates
-        // but safe to do.
-        setTimeout(() => {
-            startPractiseMission(position, rotation);
-        }, 0);
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#1a1a1a]">
+        <Loader2 className="animate-spin text-purple-500" size={48} />
+      </div>
+    );
+  }
+
+  // Allow guest access - we handle auth in LandingPage if needed
+  // if (!user) {
+  //   return <AuthPage onSuccess={() => {}} />;
+  // }
+
+  // ----------------------------------------------------------------------
+  // RENDER LOGIC
+  // ----------------------------------------------------------------------
 
   if (currentPage === 'LANDING') {
-    return <LandingPage onSelectGame={(game) => setCurrentPage(game)} />;
+    return <LandingPage onSelectGame={(game) => setCurrentPage(game)} onSignOut={signOut} user={user} />;
   }
 
   if (currentPage === 'VIGI') {
