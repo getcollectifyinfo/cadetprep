@@ -61,6 +61,19 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [gameDuration, setGameDuration] = useState(2); // Minutes
   const [ruleChangeFreq, setRuleChangeFreq] = useState(3); // 1-5 scale
+  const [enabledRules, setEnabledRules] = useState<CalcRule[]>(['ADD', 'DOUBLE_ADD', 'SUBTRACT', 'DOUBLE_SUBTRACT']);
+
+  const toggleRule = (rule: CalcRule) => {
+    setEnabledRules(prev => {
+      if (prev.includes(rule)) {
+        // Prevent disabling the last rule
+        if (prev.length === 1) return prev;
+        return prev.filter(r => r !== rule);
+      } else {
+        return [...prev, rule];
+      }
+    });
+  };
 
   const [showHint, setShowHint] = useState(false);
   const [hintText, setHintText] = useState('');
@@ -82,7 +95,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   }, [assignments]);
 
   // Calculation Game State
-  type CalcState = 'IDLE' | 'SHOWING_RULE' | 'SHOWING_NUM_1' | 'SHOWING_NUM_1_WAIT' | 'SHOWING_NUM_2' | 'SHOWING_NUM_2_WAIT' | 'INPUT' | 'FEEDBACK' | 'NEXT_NUM_DELAY' | 'SHOWING_NEXT_NUM' | 'SHOWING_NEXT_NUM_WAIT';
+  type CalcState = 'IDLE' | 'SHOWING_RULE_AND_START' | 'SHOWING_NEXT_NUM' | 'SHOWING_NEXT_NUM_WAIT' | 'INPUT' | 'FEEDBACK' | 'DECIDE_AFTER_INPUT';
 
   const [calcState, setCalcState] = useState<CalcState>('IDLE');
   const [currentRule, setCurrentRule] = useState<CalcRule>('ADD');
@@ -90,7 +103,11 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const [displayedNumber, setDisplayedNumber] = useState<number | null>(null);
   const [calcInput, setCalcInput] = useState('');
   const [calcFeedback, setCalcFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
-  const [isInitialRound, setIsInitialRound] = useState(true);
+  
+  // Stream Control
+  const [numbersShownCount, setNumbersShownCount] = useState(0);
+  const [targetNumbersCount, setTargetNumbersCount] = useState(3);
+  
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Start Calculation Game Loop
@@ -99,20 +116,30 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
 
     // Initial Start
     if (calcState === 'IDLE') {
-        // We cannot call setState directly here if it causes a loop or runs on every render
-        // But since we check for IDLE, it should be safe. However, React strict mode or effect rules might complain.
-        // Let's wrap in a timeout to be safe and break synchronous update cycle.
         const timeout = setTimeout(() => {
-            const rules: CalcRule[] = ['ADD', 'DOUBLE_ADD', 'SUBTRACT', 'DOUBLE_SUBTRACT'];
-            const randomRule = rules[Math.floor(Math.random() * rules.length)];
+            const randomRule = enabledRules[Math.floor(Math.random() * enabledRules.length)];
             setCurrentRule(randomRule);
-            setCalcTotal(0);
-            setIsInitialRound(true);
-            setCalcState('SHOWING_RULE');
+            
+            // Initial Base Number Generation
+            let min = 20, max = 50;
+            if (randomRule === 'SUBTRACT' || randomRule === 'DOUBLE_SUBTRACT') {
+                min = 200;
+                max = 350; // Ensure high enough for subtraction (max deduction ~200)
+            }
+            const baseNum = Math.floor(Math.random() * (max - min)) + min;
+            
+            setDisplayedNumber(baseNum);
+            setCalcTotal(baseNum);
+            
+            // Set targets for first stream
+            setNumbersShownCount(0);
+            setTargetNumbersCount(Math.floor(Math.random() * 3) + 2); // 2, 3, or 4
+            
+            setCalcState('SHOWING_RULE_AND_START');
         }, 0);
         return () => clearTimeout(timeout);
     }
-  }, [hasStarted, gameOver, isSettingsOpen, calcState]);
+  }, [hasStarted, gameOver, isSettingsOpen, calcState, enabledRules]);
 
   // State Machine for Calculation Game
   useEffect(() => {
@@ -121,120 +148,115 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     let timeout: ReturnType<typeof setTimeout>;
 
     switch (calcState) {
-        case 'SHOWING_RULE':
+        case 'SHOWING_RULE_AND_START':
             timeout = setTimeout(() => {
-                if (isInitialRound) {
-                    setCalcState('SHOWING_NUM_1');
+                setDisplayedNumber(null);
+                setCalcState('SHOWING_NEXT_NUM');
+            }, 2000); // 2 seconds display for Rule + Start Number
+            break;
+
+        case 'SHOWING_NEXT_NUM':
+             // Generate next number and update total
+             timeout = setTimeout(() => {
+                // Determine next number range
+                let nextNum = Math.floor(Math.random() * 20) + 5; // 5 to 25
+                
+                // Safety check for subtraction to avoid negatives
+                if (currentRule === 'SUBTRACT') {
+                    if (calcTotal - nextNum < 0) nextNum = Math.floor(calcTotal / 2);
+                } else if (currentRule === 'DOUBLE_SUBTRACT') {
+                    if (calcTotal - (nextNum * 2) < 0) nextNum = Math.floor(calcTotal / 4);
+                }
+
+                setDisplayedNumber(nextNum);
+                setCalcTotal(prev => calculateNext(prev, nextNum, currentRule));
+                setNumbersShownCount(prev => prev + 1);
+                
+                setCalcState('SHOWING_NEXT_NUM_WAIT');
+             }, 500);
+             break;
+
+        case 'SHOWING_NEXT_NUM_WAIT':
+            // Display duration for the number
+            timeout = setTimeout(() => {
+                setDisplayedNumber(null);
+                
+                // Check if we reached target count
+                if (numbersShownCount >= targetNumbersCount) {
+                    setCalcState('INPUT');
                 } else {
                     setCalcState('SHOWING_NEXT_NUM');
                 }
-            }, 1000); // 1 second display for rule
+            }, 1500); // 1.5s display per number
             break;
 
-        case 'SHOWING_NUM_1':
+        case 'INPUT':
+            // Wait for input with timeout
             timeout = setTimeout(() => {
-                // Prepare for Num 1 (Base Number)
-                let min = 10, max = 50;
-                if (currentRule === 'SUBTRACT' || currentRule === 'DOUBLE_SUBTRACT') {
-                    min = 100;
-                    max = 200;
-                }
-                const num1 = Math.floor(Math.random() * (max - min)) + min;
-                
-                setDisplayedNumber(num1);
-                // First number sets the base total, rule is not applied yet
-                setCalcTotal(num1);
-                setCalcState('SHOWING_NUM_1_WAIT');
-            }, 0); 
-            break;
-
-        case 'SHOWING_NUM_1_WAIT':
-            timeout = setTimeout(() => {
-                setCalcState('SHOWING_NUM_2');
-            }, 2000);
-            break;
-
-        case 'SHOWING_NUM_2':
-             timeout = setTimeout(() => {
-                const num2 = Math.floor(Math.random() * 50) + 10;
-                setDisplayedNumber(num2);
-                setCalcTotal(prev => calculateNext(prev, num2, currentRule));
-                setCalcState('SHOWING_NUM_2_WAIT');
-             }, 0);
-             break;
-
-        case 'SHOWING_NUM_2_WAIT':
-            timeout = setTimeout(() => {
-                setDisplayedNumber(null);
-                setCalcState('INPUT');
-            }, 2000);
+                // Time's up! Treat as wrong answer
+                setStats(prev => ({ ...prev, wrong: prev.wrong + 1 }));
+                setCalcFeedback({ 
+                    isCorrect: false, 
+                    message: `Time's up! Result was ${calcTotal}`
+                });
+                setCalcInput('');
+                setCalcState('FEEDBACK');
+            }, 3000); // 3 seconds timeout
             break;
 
         case 'FEEDBACK':
             timeout = setTimeout(() => {
                 setCalcFeedback(null);
-                setCalcState('NEXT_NUM_DELAY');
+                setCalcState('DECIDE_AFTER_INPUT');
             }, 2000);
             break;
 
-
-        case 'NEXT_NUM_DELAY':
-            // Chance to change rule?
+        case 'DECIDE_AFTER_INPUT':
             timeout = setTimeout(() => {
-                // If system hint is showing, wait
-                if (showHintRef.current) {
-                     setCalcState('NEXT_NUM_DELAY'); // Re-trigger delay
-                     return;
-                }
-
-                // Calculate rule change chance based on setting (1-5)
-                // 1: 5%, 2: 15%, 3: 25%, 4: 40%, 5: 60%
+                // Calculate rule change chance
                 const chances = [0.05, 0.15, 0.25, 0.40, 0.60];
                 const chance = chances[ruleChangeFreq - 1] || 0.2;
 
-                if (Math.random() < chance) {
-                    const rules: CalcRule[] = ['ADD', 'DOUBLE_ADD', 'SUBTRACT', 'DOUBLE_SUBTRACT'];
-                    const newRule = rules[Math.floor(Math.random() * rules.length)];
+                // Force rule change if total is too low for subtraction to continue safely
+                const isLowTotal = (currentRule === 'SUBTRACT' || currentRule === 'DOUBLE_SUBTRACT') && calcTotal < 100;
+
+                if (Math.random() < chance || isLowTotal) {
+                    // CHANGE RULE -> RESET EVERYTHING
+                    
+                    // Filter out current rule if we have other options to ensure a visible change
+                    const availableRules = enabledRules.length > 1 
+                        ? enabledRules.filter(r => r !== currentRule)
+                        : enabledRules;
+                        
+                    const newRule = availableRules[Math.floor(Math.random() * availableRules.length)];
                     setCurrentRule(newRule);
-                    setCalcState('SHOWING_RULE'); 
+                    
+                    // New Base Number
+                    let min = 20, max = 50;
+                    if (newRule === 'SUBTRACT' || newRule === 'DOUBLE_SUBTRACT') {
+                        min = 200;
+                        max = 350;
+                    }
+                    const baseNum = Math.floor(Math.random() * (max - min)) + min;
+                    
+                    setDisplayedNumber(baseNum);
+                    setCalcTotal(baseNum);
+                    setNumbersShownCount(0);
+                    setTargetNumbersCount(Math.floor(Math.random() * 3) + 2);
+                    
+                    setCalcState('SHOWING_RULE_AND_START');
                 } else {
-                     setCalcState('SHOWING_NEXT_NUM');
+                    // CONTINUE SAME RULE -> KEEP TOTAL
+                    setNumbersShownCount(0);
+                    setTargetNumbersCount(Math.floor(Math.random() * 3) + 2);
+                    setCalcState('SHOWING_NEXT_NUM');
                 }
-            }, 500); // Check every 500ms if blocked, or just proceed
-            break;
-
-
-        case 'SHOWING_NEXT_NUM':
-             // State transition logic moved inside timeout to avoid synchronous setState warning
-             // Wait briefly before generating to allow UI to update if needed, 
-             // but actually we want immediate transition. 
-             // The warning "Calling setState synchronously within an effect" happens if we update state 
-             // directly in the switch case body without a condition or timeout.
-             // We can wrap the generation in a timeout(0) or just use the timeout for the display duration.
-             
-             timeout = setTimeout(() => {
-                const nextNum = Math.floor(Math.random() * 50) + 10;
-                setDisplayedNumber(nextNum);
-                setCalcTotal(prev => calculateNext(prev, nextNum, currentRule));
-                
-                // Then set another timeout to hide it? 
-                // We need a way to show it for 2s then go to INPUT.
-                // We can't nest timeouts easily in this effect structure if we want clean cleanup.
-                // Better: Change state to 'SHOWING_NEXT_NUM_WAIT'
-                setCalcState('SHOWING_NEXT_NUM_WAIT');
-             }, 0);
-            break;
-
-        case 'SHOWING_NEXT_NUM_WAIT':
-            timeout = setTimeout(() => {
-                setDisplayedNumber(null);
-                setCalcState('INPUT');
-            }, 2000);
+            }, 0);
             break;
     }
 
     return () => clearTimeout(timeout);
-  }, [calcState, hasStarted, gameOver, isSettingsOpen, currentRule, isInitialRound, ruleChangeFreq]);
+  }, [calcState, hasStarted, gameOver, isSettingsOpen, currentRule, numbersShownCount, targetNumbersCount, ruleChangeFreq, enabledRules]);
 
   const handleCalcSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,17 +264,18 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     if (isNaN(val)) return;
 
     if (val === calcTotal) {
+        setStats(prev => ({ ...prev, correct: prev.correct + 1 }));
         setCalcFeedback({ isCorrect: true, message: `CORRECT: ${val}` });
     } else {
+        setStats(prev => ({ ...prev, wrong: prev.wrong + 1 }));
         setCalcFeedback({ 
             isCorrect: false, 
-            message: `Calculation Wrong. Current result is ${calcTotal}\nRule is : "${getRuleText(currentRule)}"`
+            message: `Wrong. Result was ${calcTotal}`
         });
     }
     setCalcInput('');
-    setIsInitialRound(false); // First round complete
     
-    // Clear hint if showing to avoid overlap
+    // Clear hint if showing
     if (showHintRef.current) {
         setShowHint(false);
         if (hintTimeoutRef.current) clearTimeout(hintTimeoutRef.current);
@@ -298,7 +321,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
   const hintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // State to track if system messages are allowed
-  const isMathBusy = ['SHOWING_RULE', 'FEEDBACK'].includes(calcState);
+  const isMathBusy = ['SHOWING_RULE_AND_START', 'FEEDBACK'].includes(calcState);
 
   // Helper to show hint
   const triggerHint = useCallback((text: string) => {
@@ -598,6 +621,26 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
         onClose={() => setIsSettingsOpen(false)}
         title="IPP Settings"
       >
+        {/* Math Rules */}
+        <SettingsSection title="Math Operations">
+            <SettingsLabel>Enabled Rules</SettingsLabel>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+                {(['ADD', 'SUBTRACT', 'DOUBLE_ADD', 'DOUBLE_SUBTRACT'] as CalcRule[]).map(rule => (
+                    <button
+                        key={rule}
+                        onClick={() => toggleRule(rule)}
+                        className={`p-2 rounded-lg border-2 text-xs font-bold transition-all
+                            ${enabledRules.includes(rule)
+                              ? 'border-purple-600 bg-purple-50 text-purple-700' 
+                              : 'border-gray-200 text-gray-400 hover:border-gray-300'
+                            }`}
+                    >
+                        {getRuleText(rule)}
+                    </button>
+                ))}
+            </div>
+        </SettingsSection>
+
         {/* Difficulty */}
         <SettingsSection title="Difficulty">
             <SettingsLabel>Gauge Difficulty</SettingsLabel>
@@ -749,13 +792,13 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
 
                     {/* Message / Feedback Area - Fixed Position below Number Display */}
                     <div className="absolute top-36 left-1/2 -translate-x-1/2 w-[600px] h-24 flex items-start justify-center z-50">
-                        {(calcState === 'SHOWING_RULE' || calcState === 'FEEDBACK') && (
+                        {(calcState === 'SHOWING_RULE_AND_START' || calcState === 'FEEDBACK') && (
                             <div className={`w-full text-center text-xl font-bold font-mono p-2 rounded bg-black/50 backdrop-blur-sm border border-white/20 animate-fade-in ${
                                 calcState === 'FEEDBACK' 
                                     ? (calcFeedback?.isCorrect ? 'text-green-400 border-green-500/50' : 'text-red-400 border-red-500/50')
                                     : 'text-blue-400 border-blue-500/50'
                             }`}>
-                                {calcState === 'SHOWING_RULE' && (
+                                {calcState === 'SHOWING_RULE_AND_START' && (
                                     <>
                                         <div className="text-xs text-gray-400 uppercase tracking-widest mb-1">New Calculation Rule</div>
                                         <div className="animate-pulse">{getRuleText(currentRule)}</div>

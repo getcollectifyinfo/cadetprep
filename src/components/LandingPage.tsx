@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye, Trophy } from 'lucide-react';
+import { Gamepad2, Gauge, Zap, Brain, LogOut, LogIn, Eye, Trophy, Box } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { AuthPage } from './Auth/AuthPage';
 
 interface LandingPageProps {
-  onSelectGame: (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1') => void;
+  onSelectGame: (game: 'WORM' | 'IPP' | 'VIGI' | 'CAPACITY' | 'VIGI1' | 'CUBE') => void;
   onSignOut: () => void;
   onShowStats: () => void;
   user: User | null;
@@ -84,7 +84,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
         <h1 className="text-6xl font-bold text-white mb-8 tracking-wider">SKY TEST SIMULATION</h1>
       </div>
       
-      <div className="flex gap-16">
+      <div className="flex flex-wrap justify-center gap-8 max-w-[90rem]">
         {/* WORM Button */}
         <button 
           onClick={() => onSelectGame('WORM')}
@@ -147,6 +147,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectGame, onSignOu
             <Brain size={64} className="text-white" />
           </div>
           <span className="text-3xl font-bold text-white tracking-widest group-hover:text-yellow-400">CAPACITY</span>
+        </button>
+
+        {/* CUBE Button */}
+        <button 
+          onClick={() => onSelectGame('CUBE')}
+          className="group flex flex-col items-center gap-6 p-12 bg-gray-800 rounded-2xl border-4 border-transparent hover:border-pink-500 hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-2 shadow-xl"
+        >
+          <div className="p-6 bg-pink-500 rounded-full group-hover:scale-110 transition-transform duration-300">
+            <Box size={64} className="text-white" />
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-3xl font-bold text-white tracking-widest group-hover:text-pink-400">CUBE</span>
+            <span className="text-sm font-medium text-gray-400 mt-2 group-hover:text-pink-300">Spatial Orientation</span>
+          </div>
         </button>
       </div>
     </div>

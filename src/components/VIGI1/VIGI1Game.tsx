@@ -52,6 +52,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
     <div className="relative w-full h-screen bg-gray-200 flex flex-col items-center justify-center font-sans select-none">
       
       {/* Top Left Stats */}
+      {isPlaying && (
       <div className="absolute top-4 left-4 flex gap-4 text-gray-800 z-[1000]">
          <div className="bg-white px-4 py-2 rounded shadow">
              <span className="font-bold">SCORE:</span> {score}
@@ -60,8 +61,10 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
              <span className="font-bold">TIME:</span> {formatTime(gameTime)}
          </div>
       </div>
+      )}
 
       {/* Top Right Standard Menu */}
+      {isPlaying && (
       <div className="absolute top-4 right-4 z-[2000] flex flex-col gap-3">
             {/* Tutorial */}
             <button 
@@ -107,6 +110,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
                <LogOut size={24} />
             </button>
       </div>
+      )}
 
       {/* Main Game Area */}
       <div className="relative">
@@ -115,6 +119,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
       </div>
 
       {/* Controls */}
+      {isPlaying && (
       <div className="flex gap-16 mt-12">
         {/* Note Button */}
         <button 
@@ -132,6 +137,7 @@ const VIGI1Game: React.FC<VIGI1GameProps> = ({ onExit }) => {
           <Eye size={48} className="text-orange-500" />
         </button>
       </div>
+      )}
 
       {/* Tutorial Overlay */}
       <GameTutorial

@@ -47,6 +47,7 @@ export type Page =
   | 'VIGI' 
   | 'CAPACITY' 
   | 'VIGI1' 
+  | 'CUBE'
   | 'STATISTICS' 
   | 'SKYTEST_PRODUCT' 
   | 'SKYTEST_BLOG_1' 

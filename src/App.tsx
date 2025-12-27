@@ -7,6 +7,7 @@ import { IPPGame } from './components/IPPGame';
 import VIGIGame from './components/VIGI/VIGIGame';
 import VIGI1Game from './components/VIGI1/VIGI1Game';
 import CapacityGame from './components/Capacity/CapacityGame';
+import { CubeGame } from './components/CubeRotation/CubeGame';
 import { GameStartMenu } from './components/GameStartMenu';
 import { GameTutorial } from './components/GameTutorial';
 import { GRID_SIZE, DIFFICULTY_SETTINGS } from './types';
@@ -31,7 +32,7 @@ import { SkytestPegasusBlogPage } from './components/SkytestPegasusBlogPage';
 import { SkytestPreparationBlogPage } from './components/SkytestPreparationBlogPage';
 // import { AuthPage } from './components/Auth/AuthPage';
 import { useAuth } from './hooks/useAuth';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Gamepad2 } from 'lucide-react';
 
 import { statsService } from './services/statsService';
 
@@ -761,6 +762,10 @@ function App() {
     return <IPPGame onExit={() => setCurrentPage('LANDING')} />;
   }
 
+  if (currentPage === 'CUBE') {
+    return <CubeGame onExit={() => setCurrentPage('LANDING')} />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4 md:p-8 font-sans relative">
         <GameTutorial
@@ -788,27 +793,31 @@ function App() {
         {!isGameStarted && !isSettingsOpen && (
              <GameStartMenu 
                title="WORM"
-               onStart={() => setIsGameStarted(true)}
+               onStart={() => {
+                   setGameMode('EXAM');
+                   startExamSession();
+                   setIsGameStarted(true);
+               }}
                onSettings={() => setIsSettingsOpen(true)}
                onBack={() => setCurrentPage('LANDING')}
                onTutorial={() => setIsTutorialOpen(true)}
-             />
+             >
+                <button 
+                  onClick={() => {
+                      setGameMode('PRACTISE');
+                      setIsGameStarted(true);
+                  }}
+                  className="group flex items-center justify-center gap-3 w-full py-4 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-bold text-xl transition-all hover:scale-105 shadow-lg"
+                >
+                  <Gamepad2 size={24} className="fill-current" />
+                  PRACTISE MODE
+                </button>
+             </GameStartMenu>
         )}
 
         {/* Game UI - Only show when started */}
         {isGameStarted && (
            <>
-              {/* Back Button */}
-              <button 
-                  onClick={() => setCurrentPage('LANDING')}
-                  className="fixed top-4 left-4 z-[60] p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all hover:scale-110 group"
-                  title="Back to Menu"
-              >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-              </button>
-              
               {/* Top Right Controls */}
               <div className="fixed top-4 right-4 z-[60] flex flex-col gap-3">
                   {/* Tutorial Button */}
@@ -868,6 +877,20 @@ function App() {
                           Exam Mode
                       </span>
                   </button>
+
+                  {/* Exit/Back Button */}
+                   <button 
+                       onClick={() => setIsGameStarted(false)}
+                       className="p-3 bg-red-500 text-white backdrop-blur-sm rounded-full shadow-lg hover:bg-red-600 transition-all hover:scale-110 group relative"
+                       title="Back to Menu"
+                   >
+                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                       </svg>
+                       <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                           Exit
+                       </span>
+                   </button>
               </div>
 
               {gameMode === 'PRACTISE' && (
@@ -1052,7 +1075,7 @@ function App() {
                                         Restart Exam
                                     </button>
                                     <button 
-                                        onClick={switchToPractise}
+                                        onClick={() => setIsGameStarted(false)}
                                         className="w-full py-4 bg-gray-700 rounded-xl font-bold text-xl hover:bg-gray-600 transition-colors"
                                     >
                                         Back to Menu

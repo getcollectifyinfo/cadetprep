@@ -113,29 +113,16 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
         ]}
       />
 
-      {/* HUD */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center z-10 flex flex-col items-center">
-        <div className="flex items-end gap-4">
-            <div className="text-4xl font-bold mb-1">{score}</div>
-            <div className="text-xl text-yellow-400 mb-2">{level.name}</div>
-            <div className="text-sm text-gray-300 mb-2">{formatTime(gameTime)}</div>
-        </div>
-        <div className="flex gap-4 text-xs text-gray-400">
-          <div>HIGH: {highScore}</div>
-          <div>ACC: {caughtEvents}/{totalEvents}</div>
-          <div className="text-red-400">ERR: {wrongMoves}</div>
-        </div>
-      </div>
-
       {/* Top Right Standard Menu */}
-      <div className="absolute top-4 right-4 z-[2000] flex flex-col gap-3">
+      {isPlaying && (
+      <div className="absolute top-4 right-4 z-[2000] flex flex-col gap-3 pointer-events-none">
           {/* Tutorial */}
           <button 
             onClick={() => {
                 if (isPlaying && !isPaused) handlePause();
                 setIsTutorialOpen(true);
             }}
-            className="p-3 bg-slate-800/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-slate-800 transition-all hover:scale-110 group relative border border-slate-700 text-white"
+            className="p-3 bg-slate-800/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-slate-800 transition-all hover:scale-110 group relative border border-slate-700 text-white pointer-events-auto"
             title="How to Play"
           >
              <HelpCircle size={24} />
@@ -146,7 +133,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
                 if (isPlaying && !isPaused) handlePause();
                 setShowSettings(true);
             }}
-            className="p-3 bg-slate-800/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-slate-800 transition-all hover:scale-110 group relative border border-slate-700 text-white"
+            className="p-3 bg-slate-800/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-slate-800 transition-all hover:scale-110 group relative border border-slate-700 text-white pointer-events-auto"
             title="Settings"
           >
              <Settings size={24} />
@@ -158,7 +145,7 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
                     if (isPaused) togglePause();
                     else handlePause();
                 }}
-                className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative border text-white ${isPaused ? 'bg-amber-600/90 border-amber-500 hover:bg-amber-600' : 'bg-slate-800/80 border-slate-700 hover:bg-slate-800'}`}
+                className={`p-3 backdrop-blur-sm rounded-full shadow-lg transition-all hover:scale-110 group relative border text-white pointer-events-auto ${isPaused ? 'bg-amber-600/90 border-amber-500 hover:bg-amber-600' : 'bg-slate-800/80 border-slate-700 hover:bg-slate-800'}`}
                 title={isPaused ? "Resume" : "Pause"}
               >
                  {isPaused ? <Play size={24} /> : <Pause size={24} />}
@@ -167,18 +154,13 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
           {/* Exit */}
           <button 
             onClick={onExit}
-            className="p-3 bg-red-600/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-red-700 transition-all hover:scale-110 group relative border border-red-500 text-white"
+            className="p-3 bg-red-600/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-red-700 transition-all hover:scale-110 group relative border border-red-500 text-white pointer-events-auto"
             title="Exit to Main Menu"
           >
              <LogOut size={24} />
           </button>
       </div>
-
-      {/* Pause/Resume Button (Only when playing) REMOVED */}
-      {/* {isPlaying && (
-        <button ...
-        </button>
-      )} */}
+      )}
 
       {/* Start Button Overlay */}
       {!isPlaying && !showSettings && (
@@ -193,60 +175,80 @@ const VIGIGame: React.FC<VIGIGameProps> = ({ onExit }) => {
         />
       )}
 
-      {/* Game Area */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        {/* Central Marker/Orbit */}
-        {/* <div className="w-[60%] aspect-square border-2 border-gray-800 rounded-full absolute pointer-events-none"></div> */}
-        
-        {/* The Moving Shape */}
-        <div 
-          className="absolute transition-all duration-300 ease-linear"
-          style={getPositionStyle(position)}
-        >
-          <Shape type={shape} color={color} size={60} />
-        </div>
+      {/* Game Content Wrapper - Scaled and moved left */}
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 w-[calc(100%-100px)] h-[90%] pointer-events-none">
+          {/* HUD */}
+          {isPlaying && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center z-10 flex flex-col items-center pointer-events-auto">
+            <div className="flex items-end gap-4">
+                <div className="text-4xl font-bold mb-1">{score}</div>
+                <div className="text-xl text-yellow-400 mb-2">{level.name}</div>
+                <div className="text-sm text-gray-300 mb-2">{formatTime(gameTime)}</div>
+            </div>
+            <div className="flex gap-4 text-xs text-gray-400">
+              <div>HIGH: {highScore}</div>
+              <div>ACC: {caughtEvents}/{totalEvents}</div>
+              <div className="text-red-400">ERR: {wrongMoves}</div>
+            </div>
+          </div>
+          )}
+
+          {/* Game Area */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            {/* The Moving Shape */}
+            <div 
+              className="absolute transition-all duration-300 ease-linear"
+              style={getPositionStyle(position)}
+            >
+              <Shape type={shape} color={color} size={60} />
+            </div>
+          </div>
+
+          {/* Controls - 4 Corners */}
+          {isPlaying && (
+          <>
+          {/* Top Left - JUMP */}
+          <button 
+            onClick={() => onBtnClick('JUMP')}
+            className="absolute top-0 left-0 w-32 h-32 md:w-48 md:h-48 flex items-start justify-start p-4 bg-transparent active:bg-white/10 outline-none pointer-events-auto"
+          >
+            <div className="w-full h-full border-t-4 border-l-4 border-purple-500 rounded-tl-3xl p-2">
+              <span className="text-purple-400 font-bold text-lg md:text-xl">JUMP</span>
+            </div>
+          </button>
+
+          {/* Top Right - COLOR */}
+          <button 
+            onClick={() => onBtnClick('COLOR')}
+            className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 flex items-start justify-end p-4 bg-transparent active:bg-white/10 outline-none pointer-events-auto"
+          >
+            <div className="w-full h-full border-t-4 border-r-4 border-blue-500 rounded-tr-3xl p-2 text-right">
+              <span className="text-blue-400 font-bold text-lg md:text-xl">COLOR</span>
+            </div>
+          </button>
+
+          {/* Bottom Left - TURN */}
+          <button 
+            onClick={() => onBtnClick('TURN')}
+            className="absolute bottom-0 left-0 w-32 h-32 md:w-48 md:h-48 flex items-end justify-start p-4 bg-transparent active:bg-white/10 outline-none pointer-events-auto"
+          >
+            <div className="w-full h-full border-b-4 border-l-4 border-yellow-500 rounded-bl-3xl p-2 flex items-end">
+              <span className="text-yellow-400 font-bold text-lg md:text-xl">TURN</span>
+            </div>
+          </button>
+
+          {/* Bottom Right - SHAPE */}
+          <button 
+            onClick={() => onBtnClick('SHAPE')}
+            className="absolute bottom-0 right-0 w-32 h-32 md:w-48 md:h-48 flex items-end justify-end p-4 bg-transparent active:bg-white/10 outline-none pointer-events-auto"
+          >
+            <div className="w-full h-full border-b-4 border-r-4 border-green-500 rounded-br-3xl p-2 flex items-end justify-end">
+              <span className="text-green-400 font-bold text-lg md:text-xl">SHAPE</span>
+            </div>
+          </button>
+          </>
+          )}
       </div>
-
-      {/* Controls - 4 Corners */}
-      {/* Top Left - JUMP */}
-      <button 
-        onClick={() => onBtnClick('JUMP')}
-        className="absolute top-0 left-0 w-32 h-32 md:w-48 md:h-48 flex items-start justify-start p-4 bg-transparent active:bg-white/10 outline-none"
-      >
-        <div className="w-full h-full border-t-4 border-l-4 border-purple-500 rounded-tl-3xl p-2">
-          <span className="text-purple-400 font-bold text-lg md:text-xl">JUMP</span>
-        </div>
-      </button>
-
-      {/* Top Right - COLOR */}
-      <button 
-        onClick={() => onBtnClick('COLOR')}
-        className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 flex items-start justify-end p-4 bg-transparent active:bg-white/10 outline-none"
-      >
-        <div className="w-full h-full border-t-4 border-r-4 border-blue-500 rounded-tr-3xl p-2 text-right">
-          <span className="text-blue-400 font-bold text-lg md:text-xl">COLOR</span>
-        </div>
-      </button>
-
-      {/* Bottom Left - TURN */}
-      <button 
-        onClick={() => onBtnClick('TURN')}
-        className="absolute bottom-0 left-0 w-32 h-32 md:w-48 md:h-48 flex items-end justify-start p-4 bg-transparent active:bg-white/10 outline-none"
-      >
-        <div className="w-full h-full border-b-4 border-l-4 border-yellow-500 rounded-bl-3xl p-2 flex items-end">
-          <span className="text-yellow-400 font-bold text-lg md:text-xl">TURN</span>
-        </div>
-      </button>
-
-      {/* Bottom Right - SHAPE */}
-      <button 
-        onClick={() => onBtnClick('SHAPE')}
-        className="absolute bottom-0 right-0 w-32 h-32 md:w-48 md:h-48 flex items-end justify-end p-4 bg-transparent active:bg-white/10 outline-none"
-      >
-        <div className="w-full h-full border-b-4 border-r-4 border-green-500 rounded-br-3xl p-2 flex items-end justify-end">
-          <span className="text-green-400 font-bold text-lg md:text-xl">SHAPE</span>
-        </div>
-      </button>
       
       {/* Pause Menu */}
       {showPauseMenu && (
