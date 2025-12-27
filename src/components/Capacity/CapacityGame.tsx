@@ -167,22 +167,29 @@ const CapacityGame: React.FC<CapacityGameProps> = ({ onExit }) => {
     if (gameState !== 'running' || isPaused) return;
 
     const interval = setInterval(() => {
-        setTimeLeft(prev => {
-            // Check for game switch
-            if (gameMode === 'DICE' && prev === Math.floor(settings.gameDuration / 2)) {
-                setGameMode('ROD');
-            }
-
-            if (prev <= 1) {
-                finishGame();
-                return 0;
-            }
-            return prev - 1;
-        });
+        setTimeLeft(prev => prev - 1);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [gameState, isPaused, gameMode, settings.gameDuration, finishGame]);
+  }, [gameState, isPaused]);
+
+  // Game Logic (Phase Switch & End)
+  useEffect(() => {
+      if (gameState !== 'running') return;
+
+      // Game Over
+      if (timeLeft <= 0) {
+          // Wrap in setTimeout to avoid synchronous state update in effect
+          setTimeout(() => finishGame(), 0);
+          return;
+      }
+
+      // Switch Phase at Half Time
+      const halfTime = Math.floor(settings.gameDuration / 2);
+      if (gameMode === 'DICE' && timeLeft === halfTime) {
+           setTimeout(() => setGameMode('ROD'), 0);
+      }
+  }, [timeLeft, gameState, gameMode, settings.gameDuration, finishGame]);
 
   const handleRestart = () => {
       // Instead of reload, we reset to menu
