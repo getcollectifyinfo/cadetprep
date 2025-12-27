@@ -5,6 +5,7 @@ import { GameStartMenu } from '../GameStartMenu';
 import { GameTutorial } from '../GameTutorial';
 import { GameSettingsModal, SettingsSection, SettingsLabel, SettingsRange } from '../GameSettingsModal';
 import { statsService } from '../../services/statsService';
+import { HelpCircle, Settings, Pause, Play, LogOut } from 'lucide-react';
 
 interface VIGIGameProps {
   onExit: () => void;

@@ -7,7 +7,7 @@ import type { CapacitySettings, CapacityStats } from './types';
 import { GameStartMenu } from '../GameStartMenu';
 import { GameTutorial } from '../GameTutorial';
 import { statsService } from '../../services/statsService';
-import { HelpCircle, Settings, Pause, Play, LogOut, Home, Target } from 'lucide-react';
+import { HelpCircle, Settings, Pause, Play, LogOut } from 'lucide-react';
 
 interface CapacityGameProps {
   onExit: () => void;
