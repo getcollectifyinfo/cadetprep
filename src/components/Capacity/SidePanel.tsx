@@ -147,11 +147,16 @@ const DiceGameLogic: React.FC<GameLogicProps> = ({ gameState, isPaused, settings
   useEffect(() => {
     if (gameState !== 'running' || isPaused) return;
     
-    // Initial spawn
-    spawnDice();
+    // Initial spawn (wrapped in timeout to avoid synchronous state update in effect)
+    const timeoutId = setTimeout(() => {
+        spawnDice();
+    }, 0);
     
     const interval = setInterval(spawnDice, settings.taskChangeSpeed);
-    return () => clearInterval(interval);
+    return () => {
+        clearTimeout(timeoutId);
+        clearInterval(interval);
+    };
   }, [gameState, isPaused, settings.taskChangeSpeed, spawnDice]);
 
   useEffect(() => {
