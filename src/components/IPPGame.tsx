@@ -49,6 +49,20 @@ const calculateNext = (current: number, num: number, rule: CalcRule) => {
 };
 
 export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
+  // Game Stats & Timing
+  const [stats, setStats] = useState<GameStats>({ correct: 0, wrong: 0 });
+  const [startTime, setStartTime] = useState(0);
+  
+  // Gauge Locks & Reaction Times
+  const [gaugeLocks, setGaugeLocks] = useState<{ [key in GaugeId]: boolean }>({ left: false, top: false, right: false });
+  const [reactionTimes, setReactionTimes] = useState<{ [key in GaugeId]: number | null }>({ left: null, top: null, right: null });
+  const [avgReactionTime, setAvgReactionTime] = useState(0);
+  
+  // Refs
+  const lockStartTimes = useRef<{ [key in GaugeId]: number | null }>({ left: null, top: null, right: null });
+  const recordedReactionTimes = useRef<number[]>([]); 
+  const hintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [timer, setTimer] = useState(120); // 2 minutes in seconds
@@ -256,7 +270,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     }
 
     return () => clearTimeout(timeout);
-  }, [calcState, hasStarted, gameOver, isSettingsOpen, currentRule, numbersShownCount, targetNumbersCount, ruleChangeFreq, enabledRules]);
+  }, [calcState, hasStarted, gameOver, isSettingsOpen, currentRule, numbersShownCount, targetNumbersCount, ruleChangeFreq, enabledRules, calcTotal]);
 
   const handleCalcSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -284,9 +298,6 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     setCalcState('FEEDBACK');
   };
 
-  const [stats, setStats] = useState<GameStats>({ correct: 0, wrong: 0 });
-  const [startTime, setStartTime] = useState(0);
-
   // Handle Game End
   const handleGameEnd = useCallback(async () => {
     setGameOver(true);
@@ -311,15 +322,8 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
 
   }, [stats, startTime, difficulty]);
 
-  const [gaugeLocks, setGaugeLocks] = useState<{ [key in GaugeId]: boolean }>({ left: false, top: false, right: false });
-  
   // Reaction time tracking
-  const lockStartTimes = useRef<{ [key in GaugeId]: number | null }>({ left: null, top: null, right: null });
-  const [reactionTimes, setReactionTimes] = useState<{ [key in GaugeId]: number | null }>({ left: null, top: null, right: null });
-  const recordedReactionTimes = useRef<number[]>([]); // Store all reaction times for average calculation
-
-  const hintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  
   // State to track if system messages are allowed
   const isMathBusy = ['SHOWING_RULE_AND_START', 'FEEDBACK'].includes(calcState);
 
@@ -503,9 +507,7 @@ export const IPPGame: React.FC<IPPGameProps> = ({ onExit }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gaugeLocks, assignments, gameOver, triggerHint, hasStarted, isSettingsOpen]);
 
-  // Fix: Move reaction times calculation to state to avoid ref access during render
-  const [avgReactionTime, setAvgReactionTime] = useState(0);
-
+  
   useEffect(() => {
     if (gameOver) {
         const times = recordedReactionTimes.current;
